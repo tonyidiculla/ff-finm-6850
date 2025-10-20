@@ -1,4 +1,27 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MYCE - Multi-Tenant Accounting System
+
+A **pure Next.js** application for multi-tenant accounting with organizations, books, chart of accounts, contacts, items, journals, invoices, bills, payments, banking, and financial reports. Built without external databases or dependencies.
+
+## Features
+
+- **Multi-tenant architecture** with organizations and books
+- **Chart of Accounts** with predefined templates (Simple Business, Retail, Service)
+- **Double-entry bookkeeping** engine with accounting invariants
+- **Contacts** management for customers and suppliers
+- **Items** and inventory tracking (non-inventory for MVP)
+- **Sales Invoices** and Purchase Bills
+- **Payments & Receipts** with AR/AP settlement
+- **Banking** with transaction management
+- **Financial Reports**: Trial Balance, General Ledger, P&L, Balance Sheet
+
+## Architecture
+
+This is a **pure Next.js** implementation that uses:
+- JSON file-based data storage (no external database)
+- Custom double-entry bookkeeping service
+- TypeScript for type safety
+- Tailwind CSS for styling
+- App Router with API routes
 
 ## Getting Started
 
@@ -6,31 +29,79 @@ First, run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:6850](http://localhost:6850) with your browser to see the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/
+├── app/                    # Next.js App Router
+│   ├── api/               # API routes
+│   │   ├── organizations/ # Organization endpoints
+│   │   ├── books/         # Book endpoints
+│   │   └── accounts/      # Chart of Accounts endpoints
+│   └── page.tsx           # Marketing landing page
+├── lib/
+│   ├── data-store.ts      # JSON-based data persistence
+│   └── services/
+│       ├── double-entry.ts           # Core bookkeeping engine
+│       └── chart-of-accounts.ts      # COA templates & management
+└── types/
+    └── accounting.ts      # Complete domain type definitions
+```
 
-## Learn More
+## Domain Model
 
-To learn more about Next.js, take a look at the following resources:
+- **Organizations** (1) ─┬─< Books (fiscal configuration)
+                         ├─< Users (profiles) ──<> org_memberships (role)
+                         └─< Contacts (customers/suppliers)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Books** (1) ─┬─< Accounts (chart of accounts)
+                 ├─< Taxes
+                 ├─< Items
+                 ├─< Journals
+                 ├─< Invoices ──< Invoice_lines
+                 ├─< Bills ──< Bill_lines
+                 ├─< Payments ──< Payment_applications (to invoice/bill)
+                 ├─< Bank_accounts ──< Bank_transactions ──< Reconciliations
+                 └─< Ledger_entries (posting rows)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## API Endpoints
 
-## Deploy on Vercel
+- `GET /api/organizations` - List organizations
+- `POST /api/organizations` - Create organization
+- `GET /api/books` - List books for organization
+- `POST /api/books` - Create book
+- `GET /api/accounts` - List chart of accounts
+- `POST /api/accounts` - Create account
+- `POST /api/accounts/from-template` - Create COA from template
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Data Storage
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The application uses a JSON file-based storage system located in:
+- `data/organizations.json`
+- `data/books.json`
+- `data/accounts.json`
+- Additional entity files as needed
+
+## Development
+
+Build the project:
+```bash
+npm run build
+```
+
+Run linting:
+```bash
+npm run lint
+```
+
+## Technology Stack
+
+- **Next.js 14+** with TypeScript
+- **Tailwind CSS** for styling
+- **Pure implementation** - no external databases or ORMs
+- **JSON file storage** for data persistence
+- **Custom accounting engine** with double-entry validation
