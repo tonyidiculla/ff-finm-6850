@@ -40,4 +40,29 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# prisma
 /src/generated/prisma
+
+# backup files
+*.bak
+*.backup
+*-backup.*
+*.old
+*.orig
+*.tmp
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+
+# temporary files
+temp/
+tmp/
+*.log
