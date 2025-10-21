@@ -1,17 +1,48 @@
 // Core domain types for the accounting system
+
+// Note: Organization represents subscribers to the service (managed centrally)
+// Entity represents business units within organizations that use financial management
+
+export type LocationCurrency = {
+  id: string
+  countryCode: string // ISO 3166-1 alpha-3
+  countryName: string
+  currencyCode: string // ISO 4217
+  currencyName: string
+  currencySymbol?: string
+  decimalPlaces: number
+  isActive: boolean
+  createdAt: Date
+  updatedAt: Date
+}
+
 export type Organization = {
   id: string
+  platformId: string // C00XXXXXX format
   name: string
   countryCode?: string
   createdAt: Date
 }
 
+export type Entity = {
+  entityPlatformId: string // E + 01-04 + 6 alphanumeric chars (E01XXXXXX, E02XXXXXX, etc.)
+  organizationPlatformId: string // C00XXXXXX format - references the organization
+  entityName: string
+  entityType: 'hospital' | 'estore' | 'pstore' | 'channel_partner'
+  isActive: boolean
+  createdAt: Date
+  country?: string // Country code for auto-population of currency and accounting standards
+}
+
 export type Book = {
   id: string
-  organizationId: string
+  entityPlatformId: string // References Entity by platform ID instead of UUID
+  organizationPlatformId: string // C00XXXXXX format - for organization reference
+  entityName: string // Denormalized for easier access
+  entityType: 'hospital' | 'estore' | 'pstore' | 'channel_partner'
   name: string
   type: 'general-ledger' | 'subsidiary' | 'cash-basis' | 'accrual-basis' | 'consolidation' | 'budget' | 'statistical'
-  baseCurrency: string // ISO 4217
+  countryCode: string // References location_currency table for currency info
   fyStartMonth: number // 1-12
   lockDate?: Date
   accountingStandard: 'GAAP' | 'IFRS' | 'Other'
@@ -29,7 +60,7 @@ export type User = {
 
 export type OrganizationMembership = {
   id: string
-  organizationId: string
+  organizationPlatformId: string // C00XXXXXX format
   userId: string
   role: 'owner' | 'admin' | 'accountant' | 'viewer'
   createdAt: Date
