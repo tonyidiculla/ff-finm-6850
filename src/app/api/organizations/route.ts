@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { JsonDataStore } from '@/lib/data-store'
+import { SupabaseDataStore } from '@/lib/supabase-data-store'
 import { Organization } from '@/types/accounting'
 
-export async function GET() {
+async function getOrganizations(request: NextRequest) {
   try {
-    const organizations = await JsonDataStore.read<Organization>('organizations')
+    // FINM is read-only for organizations - they are managed by ff-orgn-6820
+    const organizations = await SupabaseDataStore.getOrganizations()
     return NextResponse.json(organizations)
-  } catch {
+  } catch (error) {
+    console.error('Failed to fetch organizations:', error)
     return NextResponse.json(
       { error: 'Failed to fetch organizations' },
       { status: 500 }
@@ -14,32 +16,14 @@ export async function GET() {
   }
 }
 
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json()
-    const { name, countryCode } = body
-
-    if (!name) {
-      return NextResponse.json(
-        { error: 'Name is required' },
-        { status: 400 }
-      )
-    }
-
-    const organization: Organization = {
-      id: JsonDataStore.generateId(),
-      name,
-      countryCode,
-      createdAt: new Date(),
-    }
-
-    await JsonDataStore.create('organizations', organization)
-
-    return NextResponse.json(organization, { status: 201 })
-  } catch {
-    return NextResponse.json(
-      { error: 'Failed to create organization' },
-      { status: 500 }
-    )
-  }
+async function createOrganization(request: NextRequest) {
+  // Organizations are managed by ff-orgn-6820, not FINM
+  return NextResponse.json(
+    { error: 'Organizations must be created through the organization management service (ff-orgn-6820)' },
+    { status: 403 }
+  )
 }
+
+// Export routes (removed auth wrapper for now to fix the immediate issue)
+export const GET = getOrganizations;
+export const POST = createOrganization;

@@ -1,20 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { JsonDataStore } from '@/lib/data-store'
+import { SupabaseDataStore } from '@/lib/supabase-data-store'
 import { Book } from '@/types/accounting'
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const organizationId = searchParams.get('organizationId')
+    const organizationPlatformId = searchParams.get('organizationPlatformId')
+    const entityPlatformId = searchParams.get('entityPlatformId')
 
-    let books = await JsonDataStore.read<Book>('books')
+    let books = await SupabaseDataStore.getBooks()
     
-    if (organizationId) {
-      books = books.filter(book => book.organizationId === organizationId)
+    if (organizationPlatformId) {
+      books = books.filter(book => book.organizationPlatformId === organizationPlatformId)
+    }
+
+    if (entityPlatformId) {
+      books = books.filter(book => book.entityPlatformId === entityPlatformId)
     }
 
     return NextResponse.json(books)
-  } catch {
+  } catch (error) {
+    console.error('Failed to fetch books:', error)
     return NextResponse.json(
       { error: 'Failed to fetch books' },
       { status: 500 }
@@ -26,39 +32,44 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const { 
-      organizationId, 
+      entityPlatformId,
+      organizationPlatformId,
+      entityName,
+      entityType,
       name, 
       type = 'general-ledger',
-      baseCurrency = 'USD', 
+      countryCode,
       fyStartMonth = 1,
       accountingStandard = 'GAAP',
       description
     } = body
 
-    if (!organizationId || !name) {
+    if (!entityPlatformId || !organizationPlatformId || !name || !countryCode) {
       return NextResponse.json(
-        { error: 'Organization ID and name are required' },
+        { error: 'Entity platform ID, organization platform ID, name, and country code are required' },
         { status: 400 }
       )
     }
 
-    const book: Book = {
-      id: JsonDataStore.generateId(),
-      organizationId,
+    const book: Omit<Book, 'id' | 'createdAt'> = {
+      entityPlatformId,
+      organizationPlatformId,
+      entityName,
+      entityType,
       name,
       type,
-      baseCurrency,
+      countryCode,
       fyStartMonth,
       accountingStandard,
       isActive: true,
       description,
-      createdAt: new Date(),
     }
 
-    await JsonDataStore.create('books', book)
+    const createdBook = await SupabaseDataStore.createBook(book)
 
-    return NextResponse.json(book, { status: 201 })
-  } catch {
+    return NextResponse.json(createdBook, { status: 201 })
+  } catch (error) {
+    console.error('Failed to create book:', error)
     return NextResponse.json(
       { error: 'Failed to create book' },
       { status: 500 }

@@ -128,9 +128,6 @@ function AccountsPageContent() {
                 MYCE
               </Link>
               <div className="ml-10 flex space-x-8">
-                <Link href="/dashboard/organizations" className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium">
-                  Organizations
-                </Link>
                 <Link href="/dashboard/books" className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium">
                   Books
                 </Link>

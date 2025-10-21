@@ -1,6 +1,28 @@
+'use client';
+
 import Link from 'next/link'
+import { useAuth } from '../context/AuthContext'
+import { useEffect, useState } from 'react'
 
 export default function Home() {
+  const { isAuthenticated, user, loading } = useAuth();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted || loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -15,13 +37,43 @@ export default function Home() {
             Organizations • Books • Chart of Accounts • Double-Entry Bookkeeping
           </p>
           
-          <div className="mt-10">
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              Launch Dashboard
-            </Link>
+          {isAuthenticated && user ? (
+            <div className="mt-6">
+              <p className="text-green-600 font-medium">
+                Welcome back, {user.firstName} {user.lastName}!
+              </p>
+              <p className="text-sm text-gray-500 mt-1">
+                You're signed in as {user.role}
+              </p>
+            </div>
+          ) : null}
+          
+          <div className="mt-10 space-y-4 sm:space-y-0 sm:space-x-4 sm:flex sm:justify-center">
+            {isAuthenticated ? (
+              <Link
+                href="/dashboard"
+                className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Launch Dashboard
+              </Link>
+            ) : (
+              <>
+                <a
+                  href="http://localhost:6800"
+                  className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  Sign In
+                </a>
+                <a
+                  href="http://localhost:6800/register"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center px-6 py-3 border border-blue-600 text-base font-medium rounded-md text-blue-600 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  Create Account
+                </a>
+              </>
+            )}
           </div>
         </div>
 
