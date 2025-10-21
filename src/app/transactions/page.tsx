@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Journal, Account } from '@/types/accounting'
 import { useAuth } from '../../context/AuthContext'
+import JournalEntryForm from '@/components/JournalEntryForm'
 
 interface JournalWithEntries extends Journal {
   entries: Array<{
@@ -203,34 +204,15 @@ export default function TransactionsPage() {
         </div>
       </div>
 
-      {/* Create Journal Entry Modal - placeholder for now */}
+      {/* Create Journal Entry Modal */}
       {showCreateForm && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">New Journal Entry</h3>
-            </div>
-            <div className="p-6">
-              <p className="text-gray-600 mb-4">
-                Journal entry creation form will be implemented next.
-              </p>
-              <div className="flex justify-end space-x-3">
-                <button
-                  onClick={() => setShowCreateForm(false)}
-                  className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-lg font-medium transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => setShowCreateForm(false)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-                >
-                  Save Entry
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <JournalEntryForm
+          onClose={() => setShowCreateForm(false)}
+          onSuccess={() => {
+            setShowCreateForm(false)
+            loadJournals() // Reload journals after successful creation
+          }}
+        />
       )}
     </div>
   )

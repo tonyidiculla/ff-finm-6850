@@ -16,6 +16,7 @@ function BooksPageContent() {
   const [entities, setEntities] = useState<any[]>([]) // Entity type from ff-orgn-6820
   const [loading, setLoading] = useState(true)
   const [entitiesLoading, setEntitiesLoading] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [autoPopulated, setAutoPopulated] = useState({
     currency: false,
@@ -87,6 +88,9 @@ function BooksPageContent() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    console.log('Form submitted with data:', formData)
+    
+    setSubmitting(true)
     try {
       const response = await fetch('/api/books', {
         method: 'POST',
@@ -97,6 +101,7 @@ function BooksPageContent() {
       })
 
       if (response.ok) {
+        console.log('Book created successfully')
         setFormData({
           organizationPlatformId: orgId || '',
           entityPlatformId: '',
@@ -116,9 +121,13 @@ function BooksPageContent() {
         })
         setShowForm(false)
         loadData()
+      } else {
+        console.error('Failed to create book:', await response.text())
       }
     } catch (error) {
       console.error('Failed to create book:', error)
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -186,7 +195,7 @@ function BooksPageContent() {
           <div className="bg-white shadow rounded-lg mb-8">
             <div className="px-4 py-5 sm:p-6">
               <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">Create New Book</h3>
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} noValidate className="space-y-4">
                 {/* Organization and Entity Selection - Side by side */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -444,9 +453,17 @@ function BooksPageContent() {
                 <div className="flex space-x-3">
                   <button
                     type="submit"
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+                    disabled={!formData.organizationPlatformId || !formData.entityPlatformId || !formData.name.trim() || submitting}
+                    onClick={(e) => {
+                      console.log('Create Book button clicked', {
+                        disabled: !formData.organizationPlatformId || !formData.entityPlatformId || !formData.name.trim() || submitting,
+                        formData: formData,
+                        submitting: submitting
+                      })
+                    }}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
                   >
-                    Create Book
+                    {submitting ? 'Creating...' : 'Create Book'}
                   </button>
                   <button
                     type="button"

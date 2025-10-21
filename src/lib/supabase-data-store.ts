@@ -267,7 +267,10 @@ export class SupabaseDataStore {
   }
 
   static async createBook(book: Omit<Book, 'id' | 'createdAt'>): Promise<Book> {
+    console.log('Creating book with data:', JSON.stringify(book, null, 2))
+    
     // Validate country code exists in location_currency (since no FK constraint)
+    console.log('Validating country code:', book.countryCode)
     const { data: locationData, error: locationError } = await supabaseAdmin
       .from('location_currency')
       .select('country_code')
@@ -276,9 +279,12 @@ export class SupabaseDataStore {
       .single()
     
     if (locationError || !locationData) {
+      console.error('Location validation error:', locationError)
       throw new Error(`Invalid country code '${book.countryCode}'. Please ensure it exists in the location_currency table.`)
     }
+    console.log('Country code validation passed:', locationData)
 
+    console.log('Inserting book into database...')
     const { data, error } = await supabaseAdmin
       .from('finm_books')
       .insert({
@@ -297,7 +303,12 @@ export class SupabaseDataStore {
       .select()
       .single()
     
-    if (error) throw new Error(`Failed to create book: ${error.message}`)
+    if (error) {
+      console.error('Database insert error:', JSON.stringify(error, null, 2))
+      throw new Error(`Failed to create book: ${error.message}`)
+    }
+    
+    console.log('Book created successfully:', data)
     return mapDatabaseToBook(data)
   }
 

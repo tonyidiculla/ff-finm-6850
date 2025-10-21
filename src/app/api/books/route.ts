@@ -31,6 +31,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
+    console.log('Received book creation request:', JSON.stringify(body, null, 2))
+    
     const { 
       entityPlatformId,
       organizationPlatformId,
@@ -39,6 +41,7 @@ export async function POST(request: NextRequest) {
       name, 
       type = 'general-ledger',
       countryCode,
+      currency, // Extract currency but don't use it in database (use countryCode to lookup currency)
       fyStartMonth = 1,
       accountingStandard = 'GAAP',
       description
@@ -70,8 +73,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(createdBook, { status: 201 })
   } catch (error) {
     console.error('Failed to create book:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    const errorStack = error instanceof Error ? error.stack : undefined
+    console.error('Error details:', { message: errorMessage, stack: errorStack })
     return NextResponse.json(
-      { error: 'Failed to create book' },
+      { error: 'Failed to create book', details: errorMessage },
       { status: 500 }
     )
   }

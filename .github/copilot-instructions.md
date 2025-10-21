@@ -1,38 +1,23 @@
-# MYCE - Multi-Tenant Accounting System
-
-This is a Next.js application for multi-tenant accounting system with organizations, books, chart of accounts, contacts, items, journals, invoices, bills, payments, banking, and financial reports.
-
-## Domain Model
-- Organizations (1) ─┬─< Books (fiscal configuration)
-                     ├─< Users (profiles) ──<> org_memberships (role)
-                     └─< Contacts (customers/suppliers)
-
-- Books (1) ─┬─< Accounts (chart of accounts)
-             ├─< Taxes
-             ├─< Items
-             ├─< Journals
-             ├─< Invoices ──< Invoice_lines
-             ├─< Bills ──< Bill_lines
-             ├─< Payments ──< Payment_applications (to invoice/bill)
-             ├─< Bank_accounts ──< Bank_transactions ──< Reconciliations
-             └─< Ledger_entries (posting rows)
-
-## Features
-- Multi-tenant organizations and books
-- Chart of Accounts CRUD with templates
-- Contacts (Customers/Suppliers)
-- Items (non-inventory for MVP)
-- Double-entry bookkeeping engine
-- Sales Invoices and Purchase Bills
-- Payments/Receipts with AR/AP settlement
-- Banking with CSV import and reconciliation
-- Financial Reports: Trial Balance, GL, P&L, Balance Sheet, Tax Summary
-
-## Technology Stack
-- Next.js 14+ with TypeScript
-- Prisma ORM for database management
-- PostgreSQL database
-- Tailwind CSS for styling
-- NextAuth.js for authentication
-- React Hook Form for form handling
-- Zod for validation
+Core accounting and bookkeeping
+General Ledger: Tracks all financial transactions, such as sales, purchases, and payments.
+Accounts Payable (AP) and Accounts Receivable (AR): Manages money owed to suppliers and money owed by customers.
+Invoicing: Allows businesses to create and send invoices, track payments, and manage the billing process.
+Bank Reconciliation: Matches internal accounting records with bank statements to ensure accuracy. 
+Financial planning and analysis (FP&A)
+Budgeting and Forecasting: Helps in creating budgets and predicting future financial performance.
+Financial Planning: Supports long-term financial strategy and decision-making.
+Profitability Analysis: Enables the analysis of costs and profitability to improve performance.
+Cash Flow Management: Provides tools to monitor, predict, and manage the flow of cash. 
+Reporting and analytics
+Financial Reporting: Generates key reports like the balance sheet, income statement, and cash flow statement. 
+Data Consolidation: Consolidates financial data from different sources for comprehensive analysis. 
+Dashboards: Provides a visual overview of key financial metrics and performance indicators. 
+Compliance and risk management
+Governance, Risk, and Compliance (GRC): Helps align activities with business goals, identify risks, and ensure compliance with regulations. 
+Audit Trails: Maintains a detailed, auditable history of all transactions. 
+Regulatory Compliance: Ensures the software adheres to relevant legal and industry standards, such as IFRS 15 or SOX. 
+Other key features
+Automation: Automates repetitive tasks to improve efficiency and reduce errors.
+Scalability: Is able to grow with the business and handle increasing transaction volumes. 
+Integration: Can integrate with other business systems, such as banking and payroll. 
+Payroll: Handles employee payments, including tax calculations and deductions. 
