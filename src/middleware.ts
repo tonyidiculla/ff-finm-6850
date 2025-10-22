@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 // Define protected routes (all routes except health endpoints)
-const protectedRoutes = ['/dashboard', '/accounts', '/books', '/organizations', '/transactions', '/reports'];
+const protectedRoutes = ['/', '/accounts', '/books', '/transactions', '/reports'];
 const publicRoutes = ['/api/health']; // Only health endpoints are public
 
 // Simple in-memory cache for token verification (valid for 30 seconds)
@@ -12,7 +12,7 @@ async function verifyToken(token: string): Promise<boolean> {
   // Check cache first
   const cached = tokenCache.get(token);
   if (cached && cached.expires > Date.now()) {
-    console.log('[Middleware] Using cached token verification');
+    console.log('[Finance Middleware] Using cached token verification');
     return cached.valid;
   }
 
@@ -36,7 +36,7 @@ async function verifyToken(token: string): Promise<boolean> {
     
     return isValid;
   } catch (error) {
-    console.error('Token verification failed:', error);
+    console.error('[Finance Middleware] Token verification failed:', error);
     return false;
   }
 }
@@ -44,32 +44,7 @@ async function verifyToken(token: string): Promise<boolean> {
 export async function middleware(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
   
-  console.log('[Middleware] Request:', pathname, 'Query:', Object.fromEntries(searchParams.entries()));
-  
-  // Check if we have an auth token in URL params (from auth service redirect)
-  const authToken = searchParams.get('auth_token');
-  if (authToken) {
-    console.log('[Middleware] Auth token in URL, verifying...');
-    // Verify the token
-    const isValid = await verifyToken(authToken);
-    console.log('[Middleware] Token verification result:', isValid);
-    if (isValid) {
-      console.log('[Middleware] Setting cookie and redirecting');
-      // Set the cookie and redirect to clean URL (remove token from URL)
-      const cleanUrl = new URL(request.url);
-      cleanUrl.searchParams.delete('auth_token');
-      
-      const response = NextResponse.redirect(cleanUrl);
-      response.cookies.set('furfield_token', authToken, {
-        path: '/',
-        maxAge: 7 * 24 * 60 * 60, // 7 days
-        httpOnly: false,
-        sameSite: 'strict',
-      });
-      console.log('[Middleware] Cookie set, redirecting to:', cleanUrl.pathname);
-      return response;
-    }
-  }
+  console.log('[Finance Middleware] Request:', pathname);
   
   // Allow public routes (health checks, etc.)
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
@@ -77,57 +52,49 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
   
-  // Special handling for root route - redirect to dashboard
-  if (pathname === '/') {
-    const token = request.cookies.get('furfield_token')?.value;
-    
-    if (!token) {
-      // No token - redirect to ff-auth with dashboard as return URL
-      const returnUrl = encodeURIComponent('http://localhost:6850/dashboard');
-      return NextResponse.redirect(`http://localhost:6800?returnUrl=${returnUrl}`);
-    }
-    
-    // Verify token
-    const isValid = await verifyToken(token);
-    if (!isValid) {
-      // Invalid token - redirect to ff-auth with dashboard as return URL
-      const returnUrl = encodeURIComponent('http://localhost:6850/dashboard');
-      return NextResponse.redirect(`http://localhost:6800?returnUrl=${returnUrl}`);
-    }
-    
-    // Valid token - redirect to dashboard
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+  // Check for authentication token in cookies OR URL query parameter
+  let token = request.cookies.get('furfield_token')?.value;
+  const tokenFromUrl = searchParams.get('token');
+  
+  // If token in URL but not in cookie, use URL token and set cookie
+  if (!token && tokenFromUrl) {
+    token = tokenFromUrl;
+    console.log('[Finance Middleware] Token found in URL, will set cookie');
   }
   
-  // All other routes are protected and require authentication
-  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
-  
-  if (isProtectedRoute) {
-    // Get token from cookie
-    const token = request.cookies.get('furfield_token')?.value;
-    
-    console.log('[Middleware] Protected route:', pathname, 'Token present:', !!token);
-    
-    if (!token) {
-      // No token found - redirect to ff-auth with return URL
-      console.log('[Middleware] No token - redirecting to auth');
-      const returnUrl = encodeURIComponent(request.url);
-      return NextResponse.redirect(`http://localhost:6800?returnUrl=${returnUrl}`);
-    }
-    
-    // Verify token with ff-auth service
-    const isValid = await verifyToken(token);
-    console.log('[Middleware] Token verification result:', isValid);
-    
-    if (!isValid) {
-      // Invalid token - redirect to ff-auth with return URL
-      console.log('[Middleware] Invalid token - redirecting to auth');
-      const returnUrl = encodeURIComponent(request.url);
-      return NextResponse.redirect(`http://localhost:6800?returnUrl=${returnUrl}`);
-    }
+  if (!token) {
+    console.log('[Finance Middleware] No token found, redirecting to auth');
+    // No token - redirect to ff-auth
+    return NextResponse.redirect('http://localhost:6800/login');
   }
   
-  console.log('[Middleware] Allowing request to:', pathname);
+  // Verify token
+  const isValid = await verifyToken(token);
+  if (!isValid) {
+    console.log('[Finance Middleware] Invalid token, redirecting to auth');
+    // Invalid token - clear cookies and redirect to ff-auth
+    const response = NextResponse.redirect('http://localhost:6800/login');
+    response.cookies.delete('furfield_token');
+    response.cookies.delete('furfield_user');
+    return response;
+  }
+  
+  console.log('[Finance Middleware] Token valid, allowing access');
+  
+  // If token was from URL, set it as cookie and redirect to clean URL
+  if (tokenFromUrl) {
+    const response = NextResponse.redirect(new URL(pathname, request.url));
+    response.cookies.set('furfield_token', token, {
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60,
+      httpOnly: false,
+      sameSite: 'lax',
+      secure: false,
+    });
+    return response;
+  }
+  
+  // Valid token - allow access
   return NextResponse.next();
 }
 
@@ -135,12 +102,11 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except for the ones starting with:
-     * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - accounts, transactions (temporarily bypass for debugging)
+     * - public folder
      */
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.jpg$|.*\\.jpeg$|.*\\.svg$).*)',
   ],
 };

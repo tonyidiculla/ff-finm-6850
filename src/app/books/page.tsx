@@ -156,14 +156,14 @@ function BooksPageContent() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
-              <Link href="/dashboard" className="text-xl font-bold text-gray-900">
+              <Link href="/" className="text-xl font-bold text-gray-900">
                 MYCE
               </Link>
               <div className="ml-10 flex space-x-8">
-                <Link href="/dashboard/books" className="text-blue-600 hover:text-blue-900 px-3 py-2 text-sm font-medium border-b-2 border-blue-600">
+                <Link href="/books" className="text-blue-600 hover:text-blue-900 px-3 py-2 text-sm font-medium border-b-2 border-blue-600">
                   Books
                 </Link>
-                <Link href="/dashboard/accounts" className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium">
+                <Link href="/accounts" className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium">
                   Chart of Accounts
                 </Link>
               </div>
@@ -547,13 +547,13 @@ function BooksPageContent() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <Link
-                            href={`/dashboard/accounts?bookId=${book.id}`}
+                            href={`/accounts?bookId=${book.id}`}
                             className="text-blue-600 hover:text-blue-900 mr-4"
                           >
                             Chart of Accounts
                           </Link>
                           <Link
-                            href={`/dashboard/books/${book.id}`}
+                            href={`/books/${book.id}`}
                             className="text-blue-600 hover:text-blue-900"
                           >
                             View

@@ -2,20 +2,19 @@
 
 import React from 'react';
 import { FurfieldHeader } from './FurfieldHeader';
+import { useAuth } from '@/context/AuthContext';
 
 export const Header: React.FC = () => {
+  const { user, logout } = useAuth();
+
   const handleLogout = () => {
-    // Clear auth cookie
-    document.cookie = 'furfield_token=; Max-Age=0; path=/;';
-    // Redirect to login
-    window.location.href = 'http://localhost:6800/login';
+    logout();
   };
 
   return (
     <FurfieldHeader
-      currentModule="finance"
-      userName="Admin User"
-      userRole="Financial Manager"
+      userName={user ? `${user.firstName} ${user.lastName}` : 'Guest User'}
+      userRole={user?.role || 'Guest'}
       onLogout={handleLogout}
     />
   );

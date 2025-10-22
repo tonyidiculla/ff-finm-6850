@@ -121,7 +121,7 @@ export default function NewBookPage() {
         throw new Error(error.message || 'Failed to create book')
       }
 
-      router.push('/dashboard/books')
+      router.push('/books')
     } catch (error) {
       console.error('Failed to create book:', error)
       alert(error instanceof Error ? error.message : 'Failed to create book')
@@ -147,11 +147,11 @@ export default function NewBookPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
-              <Link href="/dashboard" className="text-xl font-bold text-gray-900">
+              <Link href="/" className="text-xl font-bold text-gray-900">
                 MYCE
               </Link>
               <div className="ml-10 flex space-x-8">
-                <Link href="/dashboard/books" className="text-blue-600 hover:text-blue-800 px-3 py-2 text-sm font-medium">
+                <Link href="/books" className="text-blue-600 hover:text-blue-800 px-3 py-2 text-sm font-medium">
                   ← Back to Books
                 </Link>
               </div>
@@ -368,7 +368,7 @@ export default function NewBookPage() {
 
             <div className="flex justify-end space-x-3 pt-4 border-t">
               <Link
-                href="/dashboard/books"
+                href="/books"
                 className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
               >
                 Cancel

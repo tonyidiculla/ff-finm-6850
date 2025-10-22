@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Base path for reverse proxy access through HMS Gateway
+  
   // Suppress React DevTools console message in production
   webpack: (config, { dev, isServer }) => {
     if (!dev && !isServer) {

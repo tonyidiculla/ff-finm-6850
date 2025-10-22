@@ -137,7 +137,7 @@ export default function AccountsPage() {
             </div>
             <div className="flex space-x-3">
               <Link
-                href="/dashboard"
+                href="/"
                 className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-lg font-medium transition-colors"
               >
                 ← Dashboard

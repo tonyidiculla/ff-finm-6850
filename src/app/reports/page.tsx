@@ -393,7 +393,7 @@ export default function ReportsPage() {
               </p>
             </div>
             <Link
-              href="/dashboard"
+              href="/"
               className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-lg font-medium transition-colors"
             >
               ← Dashboard
