@@ -65,9 +65,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error: any) {
       // Silently handle auth errors - middleware will handle redirects
-      if (error?.response?.status === 401) {
-        Cookies.remove('furfield_token');
-      }
+      // Do NOT remove the cookie here - let middleware handle auth
+      console.log('Auth check failed, but keeping cookie for middleware to handle');
     } finally {
       setLoading(false);
     }
@@ -101,8 +100,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     Cookies.remove('furfield_token');
     Cookies.remove('furfield_refresh_token');
     setUser(null);
-    // Redirect to central auth service instead of local login page
-    window.location.href = 'http://localhost:6800';
+    // Redirect to central auth service logout page to clear all auth data
+    window.location.href = 'http://localhost:6800/logout';
   };
 
   const refreshToken = async (): Promise<boolean> => {

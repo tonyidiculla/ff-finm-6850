@@ -2,22 +2,42 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Book } from '@/types/accounting'
-import { formatDisplayDate } from '@/lib/utils/date'
-import InfoTooltip from '@/components/InfoTooltip'
 import { useAuth } from '../../context/AuthContext'
+
+interface Book {
+  id: string;
+  name: string;
+  organizationPlatformId: string;
+  entityPlatformId: string;
+  currency: string;
+  fyStartMonth: number;
+  accountingStandard: string;
+  status: string;
+}
 
 export default function Dashboard() {
   const [books, setBooks] = useState<Book[]>([])
   const [loading, setLoading] = useState(true)
-  const { user, logout } = useAuth();
+  const [mounted, setMounted] = useState(false)
+  const { user } = useAuth();
 
-  // Note: Authentication is handled by middleware, no need to redirect here
+  // Prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+    
+    // Ensure cookie is set from query param if present
+    const urlParams = new URLSearchParams(window.location.search);
+    const authToken = urlParams.get('auth_token');
+    if (authToken) {
+      console.log('Setting cookie from URL param...');
+      document.cookie = `furfield_token=${authToken}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Strict`;
+      window.history.replaceState({}, '', '/dashboard');
+    }
+  }, []);
 
   useEffect(() => {
     async function loadData() {
       try {
-        // Get token from cookies
         const token = document.cookie
           .split('; ')
           .find(row => row.startsWith('furfield_token='))
@@ -35,7 +55,6 @@ export default function Dashboard() {
         }
         
         const booksData = await booksRes.json()
-        
         setBooks(booksData)
       } catch (error) {
         console.error('Failed to load data:', error)
@@ -44,13 +63,12 @@ export default function Dashboard() {
       }
     }
 
-    // Always load data since middleware ensures authentication
     loadData()
-  }, []); // Remove dependency on isAuthenticated
+  }, []);
 
-  if (loading) {
+  if (!mounted || loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex items-center justify-center min-h-96">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading dashboard...</p>
@@ -60,230 +78,169 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Navigation */}
-      <nav className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+        <p className="mt-2 text-gray-600">
+          Manage your multi-tenant accounting system
+          {user && (
+            <span className="ml-2 text-green-600">
+              • Authenticated as {user.firstName} {user.lastName}
+            </span>
+          )}
+        </p>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white overflow-hidden shadow-lg rounded-2xl">
+          <div className="p-6">
             <div className="flex items-center">
-              <Link href="/dashboard" className="text-xl font-bold text-gray-900">
-                MYCE
-              </Link>
-              <div className="ml-10 flex space-x-8">
-                <Link href="/dashboard/books" className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium">
-                  Books
-                </Link>
-                <Link href="/accounts" className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium">
-                  Chart of Accounts
-                </Link>
-                <Link href="/transactions" className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium">
-                  Transactions
-                </Link>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              {user && (
-                <div className="flex items-center space-x-3">
-                  <span className="text-sm text-gray-700">
-                    {user.firstName} {user.lastName}
-                  </span>
-                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                    {user.role}
-                  </span>
-                  <button
-                    onClick={logout}
-                    className="text-sm text-red-600 hover:text-red-800 px-3 py-2 rounded-md hover:bg-red-50"
-                  >
-                    Sign Out
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="mt-2 text-gray-600">
-            Manage your multi-tenant accounting system
-            {user && (
-              <span className="ml-2 text-green-600">
-                • Authenticated via Furfield Auth Service
-              </span>
-            )}
-          </p>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm2 6a2 2 0 114 0 2 2 0 01-4 0zm8-1a1 1 0 100-2 1 1 0 000 2z" />
-                    </svg>
-                  </div>
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate flex items-center">
-                      Financial Management
-                      <InfoTooltip content="Complete financial management system for managing books, accounts, transactions, and reports across multiple entities." />
-                    </dt>
-                    <dd className="text-lg font-medium text-gray-900">Multi-Entity Accounting</dd>
-                  </dl>
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center">
+                  <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm2 6a2 2 0 114 0 2 2 0 01-4 0zm8-1a1 1 0 100-2 1 1 0 000 2z" />
+                  </svg>
                 </div>
               </div>
-            </div>
-          </div>
-
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
-                    <span className="text-white text-sm font-medium">{books.length}</span>
-                  </div>
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate flex items-center">
-                      Books
-                      <InfoTooltip content="An accounting book is a set of financial records for a specific period or business unit. Each book has its own currency, fiscal year, and chart of accounts." />
-                    </dt>
-                    <dd className="text-lg font-medium text-gray-900">Accounting Books</dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
-                    <span className="text-white text-sm font-medium">0</span>
-                  </div>
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">Transactions</dt>
-                    <dd className="text-lg font-medium text-gray-900">This Month</dd>
-                  </dl>
-                </div>
+              <div className="ml-5 flex-1">
+                <dt className="text-sm font-medium text-gray-600">Financial Management</dt>
+                <dd className="text-xl font-bold text-gray-900">Multi-Entity</dd>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="bg-white shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">Quick Actions</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <Link
-                href="/dashboard/books/new"
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-              >
-                New Book
-              </Link>
-              <Link
-                href="/accounts"
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-              >
-                Manage Accounts
-              </Link>
-              <Link
-                href="/transactions"
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-              >
-                View Transactions
-              </Link>
-              <Link
-                href="/reports"
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              >
-                Financial Reports
-              </Link>
+        <div className="bg-white overflow-hidden shadow-lg rounded-2xl">
+          <div className="p-6">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center">
+                  <span className="text-white text-xl font-bold">{books.length}</span>
+                </div>
+              </div>
+              <div className="ml-5 flex-1">
+                <dt className="text-sm font-medium text-gray-600">Books</dt>
+                <dd className="text-xl font-bold text-gray-900">Accounting Books</dd>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Recent Activity */}
-        <div className="mt-8">
-          <div className="bg-white shadow rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
-              <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">Financial Management System</h3>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <div className="relative rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-gray-400">
-                  <div className="flex-shrink-0">
-                    <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                      <svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                      </svg>
-                    </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <Link href="/dashboard/books" className="focus:outline-none">
-                      <p className="text-sm font-medium text-gray-900">
-                        Manage Books
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        Create and manage accounting books for different entities
-                      </p>
-                    </Link>
-                  </div>
+        <div className="bg-white overflow-hidden shadow-lg rounded-2xl">
+          <div className="p-6">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl flex items-center justify-center">
+                  <span className="text-white text-xl font-bold">0</span>
                 </div>
+              </div>
+              <div className="ml-5 flex-1">
+                <dt className="text-sm font-medium text-gray-600">Transactions</dt>
+                <dd className="text-xl font-bold text-gray-900">This Month</dd>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-                <div className="relative rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-gray-400">
+      {/* Quick Actions */}
+      <div className="bg-white shadow-lg rounded-2xl p-6">
+        <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Link
+            href="/dashboard/books/new"
+            className="px-4 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all text-center"
+          >
+            New Book
+          </Link>
+          <Link
+            href="/dashboard/books"
+            className="px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all text-center"
+          >
+            Manage Books
+          </Link>
+          <Link
+            href="/accounts"
+            className="px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all text-center"
+          >
+            Chart of Accounts
+          </Link>
+          <Link
+            href="/transactions"
+            className="px-4 py-3 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all text-center"
+          >
+            Transactions
+          </Link>
+        </div>
+      </div>
+
+      {/* Books List */}
+      <div className="bg-white shadow-lg rounded-2xl p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-lg font-bold text-gray-900">Your Books</h3>
+          <Link
+            href="/dashboard/books/new"
+            className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white text-sm font-medium rounded-lg shadow-md hover:shadow-lg transform hover:scale-[1.02] transition-all"
+          >
+            Create New Book
+          </Link>
+        </div>
+
+        {books.length > 0 ? (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {books.map((book) => (
+              <Link
+                key={book.id}
+                href={`/dashboard/books/${book.id}`}
+                className="relative rounded-xl border border-gray-200 bg-white px-6 py-5 shadow-sm hover:border-blue-400 hover:shadow-md transition-all"
+              >
+                <div className="flex items-start space-x-3">
                   <div className="flex-shrink-0">
                     <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                       <svg className="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+                        <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
                       </svg>
                     </div>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <Link href="/accounts" className="focus:outline-none">
-                      <p className="text-sm font-medium text-gray-900">
-                        Chart of Accounts
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        Set up and manage your accounting structure
-                      </p>
-                    </Link>
+                    <p className="text-sm font-semibold text-gray-900 truncate">
+                      {book.name}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {book.currency} • FY: Month {book.fyStartMonth}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {book.accountingStandard}
+                    </p>
+                    <span className={`inline-flex mt-2 items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      book.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {book.status}
+                    </span>
                   </div>
                 </div>
-
-                <div className="relative rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-gray-400">
-                  <div className="flex-shrink-0">
-                    <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                      <svg className="w-6 h-6 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
-                      </svg>
-                    </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <Link href="/transactions" className="focus:outline-none">
-                      <p className="text-sm font-medium text-gray-900">
-                        Record Transactions
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        Create journal entries and manage transactions
-                      </p>
-                    </Link>
-                  </div>
-                </div>
-              </div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">No books</h3>
+            <p className="mt-1 text-sm text-gray-500">Get started by creating a new accounting book.</p>
+            <div className="mt-6">
+              <Link
+                href="/dashboard/books/new"
+                className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all"
+              >
+                Create New Book
+              </Link>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   )
