@@ -28,7 +28,7 @@ const modules: Module[] = [
     id: 'hms',
     name: 'HMS',
     description: 'Hospital Management',
-    url: 'http://localhost:6830',
+    url: 'http://localhost:6900',
     color: 'from-blue-500 to-indigo-600',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
