@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 
 export async function GET(request: NextRequest) {
   try {
     // Check location_currency table structure and data
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await supabase
       .from('location_currency')
       .select('*')
       .limit(10)

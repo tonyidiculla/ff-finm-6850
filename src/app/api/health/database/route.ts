@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 
 export async function GET(request: NextRequest) {
   try {
     // Test database connection
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await supabase
       .from('finm_books')
       .select('count(*)')
       .limit(1)
@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Test location_currency table access
-    const { data: locData, error: locError } = await supabaseAdmin
+    const { data: locData, error: locError } = await supabase
       .from('location_currency')
       .select('country_code, currency_code')
       .limit(1)

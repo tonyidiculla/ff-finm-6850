@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     }
     
     // Get location/currency data for the specified country
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await supabase
       .from('location_currency')
       .select('country_code, country_name, currency_code, currency_name, currency_symbol, accounting_standard')
       .eq('country_code', countryCode)

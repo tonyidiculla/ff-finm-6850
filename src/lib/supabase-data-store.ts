@@ -1,12 +1,4 @@
-import { supabaseAdmin } from './supabase'
-import { 
-  DatabaseLocationCurrency,
-  DatabaseBook, 
-  DatabaseAccount, 
-  DatabaseJournal, 
-  DatabaseLedgerEntry,
-  DatabaseContact 
-} from './supabase'
+import { supabase } from './supabase'
 import { 
   Organization, // For backward compatibility
   LocationCurrency,
@@ -16,6 +8,14 @@ import {
   Journal, 
   LedgerEntry 
 } from '@/types/accounting'
+
+// Temporary database type definitions - should be properly typed from database schema
+type DatabaseLocationCurrency = any;
+type DatabaseBook = any;
+type DatabaseAccount = any;
+type DatabaseJournal = any;
+type DatabaseLedgerEntry = any;
+type DatabaseContact = any;
 
 // Type mappings from database to application types
 const mapDatabaseToLocationCurrency = (dbLoc: DatabaseLocationCurrency): LocationCurrency => ({
@@ -97,7 +97,7 @@ export class SupabaseDataStore {
 
   // Location Currency methods (READ ONLY - managed by central system)
   static async getLocationCurrencies(): Promise<LocationCurrency[]> {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await supabase
       .from('location_currency')
       .select('*')
       .eq('is_active', true)
@@ -108,7 +108,7 @@ export class SupabaseDataStore {
   }
 
   static async getLocationCurrencyByCountryCode(countryCode: string): Promise<LocationCurrency | null> {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await supabase
       .from('location_currency')
       .select('*')
       .eq('country_code', countryCode)
@@ -156,7 +156,7 @@ export class SupabaseDataStore {
   static async getEntities(organizationPlatformId?: string): Promise<Entity[]> {
     try {
       // Query hospital_master table - include country information
-      let query = supabaseAdmin
+      let query = supabase
         .from('hospital_master')
         .select('entity_name, entity_platform_id, organization_platform_id, country, created_at')
         .eq('is_active', true)
@@ -194,7 +194,7 @@ export class SupabaseDataStore {
   }
 
   static async getEntityById(entityPlatformId: string): Promise<Entity | null> {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await supabase
       .from('finm_books')
       .select('entity_platform_id, organization_platform_id, entity_name, entity_type, created_at')
       .eq('entity_platform_id', entityPlatformId)
@@ -221,7 +221,7 @@ export class SupabaseDataStore {
   static async getOrganizations(): Promise<Organization[]> {
     try {
       // Query the organizations table directly to get all organizations
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabase
         .from('organizations')
         .select('organization_platform_id, organization_name, country, created_at')
         .eq('is_active', 'active')
@@ -254,7 +254,7 @@ export class SupabaseDataStore {
 
   // Books
   static async getBooks(entityPlatformId?: string): Promise<Book[]> {
-    let query = supabaseAdmin.from('finm_books').select('*')
+    let query = supabase.from('finm_books').select('*')
     
     if (entityPlatformId) {
       query = query.eq('entity_platform_id', entityPlatformId)
@@ -271,7 +271,7 @@ export class SupabaseDataStore {
     
     // Validate country code exists in location_currency (since no FK constraint)
     console.log('Validating country code:', book.countryCode)
-    const { data: locationData, error: locationError } = await supabaseAdmin
+    const { data: locationData, error: locationError } = await supabase
       .from('location_currency')
       .select('country_code')
       .eq('country_code', book.countryCode)
@@ -285,7 +285,7 @@ export class SupabaseDataStore {
     console.log('Country code validation passed:', locationData)
 
     console.log('Inserting book into database...')
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await supabase
       .from('finm_books')
       .insert({
         entity_platform_id: book.entityPlatformId,
@@ -313,7 +313,7 @@ export class SupabaseDataStore {
   }
 
   static async getBookById(id: string): Promise<Book | null> {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await supabase
       .from('finm_books')
       .select('*')
       .eq('id', id)
@@ -328,7 +328,7 @@ export class SupabaseDataStore {
 
   // Accounts
   static async getAccounts(bookId?: string): Promise<Account[]> {
-    let query = supabaseAdmin.from('finm_accounts').select('*')
+    let query = supabase.from('finm_accounts').select('*')
     
     if (bookId) {
       query = query.eq('book_id', bookId)
@@ -341,7 +341,7 @@ export class SupabaseDataStore {
   }
 
   static async createAccount(account: Omit<Account, 'id' | 'balance' | 'createdAt' | 'updatedAt'>): Promise<Account> {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await supabase
       .from('finm_accounts')
       .insert({
         book_id: account.bookId,
@@ -362,7 +362,7 @@ export class SupabaseDataStore {
   }
 
   static async getAccountById(id: string): Promise<Account | null> {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await supabase
       .from('finm_accounts')
       .select('*')
       .eq('id', id)
@@ -377,7 +377,7 @@ export class SupabaseDataStore {
 
   // Journals
   static async getJournals(bookId?: string): Promise<Journal[]> {
-    let query = supabaseAdmin.from('finm_journals').select('*')
+    let query = supabase.from('finm_journals').select('*')
     
     if (bookId) {
       query = query.eq('book_id', bookId)
@@ -390,7 +390,7 @@ export class SupabaseDataStore {
   }
 
   static async createJournal(journal: Omit<Journal, 'id' | 'docNo' | 'createdAt' | 'postedAt'>): Promise<Journal> {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await supabase
       .from('finm_journals')
       .insert({
         book_id: journal.bookId,
@@ -409,7 +409,7 @@ export class SupabaseDataStore {
   }
 
   static async getJournalById(id: string): Promise<Journal | null> {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await supabase
       .from('finm_journals')
       .select('*')
       .eq('id', id)
@@ -424,7 +424,7 @@ export class SupabaseDataStore {
 
   // Ledger Entries
   static async getLedgerEntries(journalId?: string): Promise<LedgerEntry[]> {
-    let query = supabaseAdmin.from('finm_ledger_entries').select('*')
+    let query = supabase.from('finm_ledger_entries').select('*')
     
     if (journalId) {
       query = query.eq('journal_id', journalId)
@@ -441,7 +441,7 @@ export class SupabaseDataStore {
     const debitAmount = entry.amountDc > 0 ? entry.amountDc : 0
     const creditAmount = entry.amountDc < 0 ? Math.abs(entry.amountDc) : 0
     
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await supabase
       .from('finm_ledger_entries')
       .insert({
         journal_id: entry.journalId,

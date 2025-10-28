@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
 
-    let query = supabaseAdmin
+    let query = supabase
       .from('finm_journals')
       .select('*')
       .order('date', { ascending: false })
@@ -129,7 +129,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate journal number (simple incrementing)
-    const { data: lastJournal } = await supabaseAdmin
+    const { data: lastJournal } = await supabase
       .from('finm_journals')
       .select('journal_number')
       .eq('book_id', bookId)
@@ -144,7 +144,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create journal
-    const { data: journal, error: journalError } = await supabaseAdmin
+    const { data: journal, error: journalError } = await supabase
       .from('finm_journals')
       .insert({
         book_id: bookId,
@@ -177,13 +177,13 @@ export async function POST(request: NextRequest) {
       line_number: index + 1,
     }));
 
-    const { error: entriesError } = await supabaseAdmin
+    const { error: entriesError } = await supabase
       .from('finm_ledger_entries')
       .insert(ledgerEntries);
 
     if (entriesError) {
       // Rollback journal if entries fail
-      await supabaseAdmin
+      await supabase
         .from('finm_journals')
         .delete()
         .eq('id', journal.id);
@@ -196,7 +196,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch complete journal with entries
-    const { data: completeJournal } = await supabaseAdmin
+    const { data: completeJournal } = await supabase
       .from('finm_journals')
       .select(`
         *,

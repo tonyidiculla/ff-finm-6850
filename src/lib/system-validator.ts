@@ -1,4 +1,4 @@
-import { supabaseAdmin } from './supabase'
+import { supabase } from './supabase'
 
 /**
  * System validation utilities for FINM
@@ -14,7 +14,7 @@ export class SystemValidator {
     recordCount?: number;
   }> {
     try {
-      const { data, error, count } = await supabaseAdmin
+      const { data, error, count } = await supabase
         .from('location_currency')
         .select('country_code', { count: 'exact' })
         .limit(1)
@@ -47,7 +47,7 @@ export class SystemValidator {
     existing: string[];
   }> {
     try {
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabase
         .from('location_currency')
         .select('country_code')
         .in('country_code', countryCodes)
@@ -87,7 +87,7 @@ export class SystemValidator {
     };
   }> {
     try {
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabase
         .from('location_currency')
         .select('country_code, currency_code, currency_name, currency_symbol')
         .eq('country_code', countryCode)

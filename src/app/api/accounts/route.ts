@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 import { Account } from '@/types/accounting'
 import { COA_TEMPLATES } from '@/lib/services/chart-of-accounts'
 
@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const bookId = searchParams.get('bookId')
 
-    let query = supabaseAdmin.from('finm_accounts').select('*')
+    let query = supabase.from('finm_accounts').select('*')
     
     if (bookId) {
       query = query.eq('book_id', bookId)
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Check if book exists
-      const { data: book, error: bookError } = await supabaseAdmin
+      const { data: book, error: bookError } = await supabase
         .from('finm_books')
         .select('id')
         .eq('id', bookId)
@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
       }))
 
       // Insert accounts
-      const { data: insertedAccounts, error: insertError } = await supabaseAdmin
+      const { data: insertedAccounts, error: insertError } = await supabase
         .from('finm_accounts')
         .insert(accountsToInsert)
         .select()
@@ -188,7 +188,7 @@ export async function POST(request: NextRequest) {
         created_by: '00000000-0000-0000-0000-000000000000' // System user UUID
       }
 
-      const { data: insertedAccount, error: insertError } = await supabaseAdmin
+      const { data: insertedAccount, error: insertError } = await supabase
         .from('finm_accounts')
         .insert(accountToInsert)
         .select()

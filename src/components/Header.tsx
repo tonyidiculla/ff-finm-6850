@@ -14,7 +14,7 @@ export const Header: React.FC = () => {
   return (
     <FurfieldHeader
       userName={user ? `${user.firstName} ${user.lastName}` : 'Guest User'}
-      userRole={user?.role || 'Guest'}
+      displayName={user?.role || 'Guest'}
       onLogout={handleLogout}
     />
   );
