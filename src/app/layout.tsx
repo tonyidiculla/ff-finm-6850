@@ -13,10 +13,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full">
-      <body className="h-full m-0 p-0" style={{ background: 'transparent' }} suppressHydrationWarning={true}>
+    <html lang="en" className="h-full overflow-hidden">
+      <body className="h-full m-0 p-0 overflow-hidden" style={{ background: 'transparent' }} suppressHydrationWarning={true}>
         <AuthProvider>
-          <div className="h-full">
+          <div className="h-full overflow-y-auto">
             {children}
           </div>
         </AuthProvider>
